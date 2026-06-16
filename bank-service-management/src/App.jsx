@@ -1,33 +1,88 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-import Navbar from "./components/Navbar";
-import Sidebar from "./components/Sidebar";
-
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Banks from "./pages/Banks";
 import Branches from "./pages/Branches";
 import Machines from "./pages/Machines";
 
+import Sidebar from "./components/Sidebar";
+import Navbar from "./components/Navbar";
+
+import { Box } from "@mui/material";
+
+function AdminLayout({ children }) {
+  return (
+    <Box sx={{ display: "flex" }}>
+      <Sidebar />
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          minHeight: "100vh",
+          backgroundColor: "#f5f7fa",
+        }}
+      >
+        <Navbar />
+
+        <Box p={3}>
+          {children}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
+      <Routes>
 
-      <div style={{ display: "flex" }}>
-        <Sidebar />
+        {/* Public Website */}
 
-        <div style={{ flex: 1 }}>
-          <Navbar />
+        <Route path="/" element={<Home />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
 
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/banks" element={<Banks />} />
-            <Route path="/branches" element={<Branches />} />
-            <Route path="/machines" element={<Machines />} />
-          </Routes>
+        {/* Admin Portal */}
 
-        </div>
-      </div>
+        <Route
+          path="/dashboard"
+          element={
+            <AdminLayout>
+              <Dashboard />
+            </AdminLayout>
+          }
+        />
 
+        <Route
+          path="/banks"
+          element={
+            <AdminLayout>
+              <Banks />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/branches"
+          element={
+            <AdminLayout>
+              <Branches />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/machines"
+          element={
+            <AdminLayout>
+              <Machines />
+            </AdminLayout>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }
