@@ -10,6 +10,8 @@ export default function Sidebar() {
       sx={{
         width: drawerWidth,
         "& .MuiDrawer-paper": {
+          backgroundColor: "#0F172A",
+          color: "white",
           width: drawerWidth,
           boxSizing: "border-box",
         },

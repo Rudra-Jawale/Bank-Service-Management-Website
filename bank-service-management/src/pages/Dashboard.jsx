@@ -65,7 +65,7 @@ function Dashboard() {
             variant="overline"
             sx={{ letterSpacing: 2 }}
           >
-            BANK SERVICE MANAGEMENT
+            {/* BANK SERVICE MANAGEMENT */}
           </Typography>
 
           <Typography
@@ -73,8 +73,7 @@ function Dashboard() {
             fontWeight="bold"
             mt={2}
           >
-            Managing Banking
-            Equipment Services
+            National Computers and communication Systems
           </Typography>
 
           <Typography
