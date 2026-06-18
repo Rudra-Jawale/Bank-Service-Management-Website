@@ -24,3 +24,26 @@ def create_user(
     db.refresh(user)
 
     return user
+
+def authenticate_user(
+        db,
+        email,
+        password,
+        verify_password
+
+):
+    user = get_user_by_email(
+        db,
+        email
+    )
+
+    if not user:
+        return None
+    
+    if not verify_password(
+        password,
+        user.password
+
+    ):
+        return None
+    return user
