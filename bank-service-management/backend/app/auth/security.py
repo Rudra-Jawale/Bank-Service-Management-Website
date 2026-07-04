@@ -1,33 +1,36 @@
-from passlib.context import CryptContext
-from jose import JWTError, jwt
 from datetime import datetime, timedelta
+
+import bcrypt
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.user import User
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
 SECRET_KEY = "bankservicemanagementsecretkey"
 
 ALGORITHM = "HS256"
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+
 def hash_password(password: str):
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
+
 
 def verify_password(
     plain_password,
     hashed_password
 ):
-    return pwd_context.verify(
-        plain_password,
-        hashed_password
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8")
     )
+
+
 def create_access_token(data: dict):
     to_encode = data.copy()
 
@@ -42,10 +45,13 @@ def create_access_token(data: dict):
         SECRET_KEY,
         algorithm=ALGORITHM
     )
-    
+
+
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/auth/login"
 )
+
+
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
@@ -53,7 +59,8 @@ def get_current_user(
     from app.repository.user_repository import get_user_by_email
     credentials_exception = HTTPException(
         status_code=401,
-        detail="Could not validate credentials"
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
     )
 
     try:

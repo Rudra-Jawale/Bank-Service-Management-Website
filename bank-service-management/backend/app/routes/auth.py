@@ -1,28 +1,14 @@
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.auth.security import get_current_user
-from app.models.user import User
-from fastapi.security import OAuth2PasswordRequestForm
 
+from app.auth.security import create_access_token, get_current_user, verify_password
 from app.database.database import get_db
+from app.models.user import User
 from app.repository.user_repository import (
-    get_user_by_email,
-    create_user
-)
-from app.schemas.user_schema import (
-    UserCreate,
-    UserLogin
-)
-
-from app.auth.security import (
-    create_access_token,
-    verify_password
-)
-
-from app.repository.user_repository import (
-    get_user_by_email,
+    authenticate_user,
     create_user,
-    authenticate_user
+    get_user_by_email,
 )
 from app.schemas.user_schema import UserCreate
 
@@ -31,7 +17,7 @@ router = APIRouter(
     tags=["Authentication"]
 )
 
-@router.post("/register")
+@router.post("/register", status_code=201)
 def register_user(
     user: UserCreate,
     db: Session = Depends(get_db)
@@ -47,7 +33,7 @@ def register_user(
             detail="Email already exists"
         )
 
-    create_user(
+    created_user = create_user(
         db,
         user.name,
         user.email,
@@ -55,14 +41,21 @@ def register_user(
     )
 
     return {
-        "message": "User registered successfully"
+        "message": "User registered successfully",
+        "user": {
+            "id": created_user.id,
+            "name": created_user.name,
+            "email": created_user.email,
+            "role": created_user.role
+        }
     }
+
+
 @router.post("/login")
 def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-
     authenticated_user = authenticate_user(
         db,
         form_data.username,
@@ -73,7 +66,8 @@ def login_user(
     if not authenticated_user:
         raise HTTPException(
             status_code=401,
-            detail="Invalid email or password"
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     access_token = create_access_token(
@@ -86,6 +80,8 @@ def login_user(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+
 @router.get("/me")
 def get_me(
     current_user: User = Depends(get_current_user)
