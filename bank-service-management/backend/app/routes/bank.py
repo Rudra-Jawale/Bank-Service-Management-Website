@@ -11,6 +11,7 @@ from app.repository.bank_repository import (
     delete_bank
 )
 from app.auth.security import get_current_user
+from app.models.bank import Bank
 
 router = APIRouter(
     prefix="/banks",
@@ -23,6 +24,13 @@ def add_bank(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    existing_bank = db.query(Bank).filter(Bank.bank_code == bank.bank_code.upper()).first()
+    if existing_bank:
+        raise HTTPException(
+            status_code=400,
+            detail="Bank with this code already exists"
+        )
+    bank.bank_code = bank.bank_code.upper()
     return create_bank(db, bank)
 
 @router.get("/")
@@ -47,3 +55,14 @@ def fetch_bank(
         )
 
     return bank
+@router.delete("/{bank_id}", status_code=204)
+def remove_bank(
+    bank_id:int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    bank = get_bank_by_id(db, bank_id)
+    if not bank:
+        raise HTTPException(status_code = 404, detail = "Bank not found")
+        delete_bank(db, bank_id)
+        return None
