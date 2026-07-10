@@ -39,14 +39,25 @@ function SignUp() {
     setMessage("");
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!user.name || !user.email || !user.password) {
       setMessage("Please fill in name, email and password.");
       return;
     }
 
-    localStorage.setItem("user", JSON.stringify(user));
-    navigate("/signin");
+    try {
+      const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.detail || "Unable to create account");
+      navigate("/signin");
+    } catch (error) {
+      setMessage(error instanceof TypeError ? "Cannot connect to the backend. Make sure FastAPI is running on http://localhost:8000." : (error.message || "Unable to create account."));
+    }
   };
 
   return (

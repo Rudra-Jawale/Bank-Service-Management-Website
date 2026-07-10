@@ -31,19 +31,31 @@ function SignIn() {
     setMessage("");
   };
 
-  const handleLogin = () => {
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (
-      savedUser &&
-      savedUser.email === login.email &&
-      savedUser.password === login.password
-    ) {
-      navigate("/dashboard");
+  const handleLogin = async () => {
+    if (!login.email || !login.password) {
+      setMessage("Please enter your email and password.");
       return;
     }
 
-    setMessage("Invalid email or password. Please check your details.");
+    try {
+      const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+      const body = new URLSearchParams();
+      body.append("username", login.email);
+      body.append("password", login.password);
+
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.detail || "Invalid email or password");
+
+      localStorage.setItem("access_token", data.access_token);
+      navigate("/dashboard");
+    } catch (error) {
+      setMessage(error instanceof TypeError ? "Cannot connect to the backend. Make sure FastAPI is running on http://localhost:8000." : (error.message || "Unable to sign in."));
+    }
   };
 
   return (
